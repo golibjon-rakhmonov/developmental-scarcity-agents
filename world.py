@@ -64,6 +64,7 @@ class WorldConfig:
     drought_length: int = 0
     drought_regrow: float = 0.0
     new_map_every: int = 0           # a fresh layout every this many steps of a world's clock; 0 = never (version 0)
+    new_map_offset: int = 0          # ... when the clock modulo new_map_every equals this
 
     def mean_regrow(self):
         """Food added per patch per step, averaged over the drought cycle."""
@@ -161,13 +162,21 @@ class Worlds:
         self.near_water = wp[:, 1:-1, 1:-1] | wp[:, :-2, 1:-1] | wp[:, 2:, 1:-1] | wp[:, 1:-1, :-2] | wp[:, 1:-1, 2:]
 
     def _new_maps(self, which):
-        """Give the worlds in `which` a fresh layout and fresh food, and put their agents somewhere on warm
-        ground. The body (energy, water, temperature, food carried) is kept: the agent has moved, not woken up."""
+        """Give the worlds in `which` a fresh layout and put their agents somewhere on warm ground. The food
+        moves with the map: the amounts on the old cold patches go, shuffled, to the new cold patches and the
+        amounts on the old warm patches to the new warm ones, so a new map neither adds nor removes food, and
+        food left on cold ground stays on cold ground. The body (energy, water, temperature, food carried) is
+        kept: the agent has moved, not woken up."""
         s, rng = self.cfg.size, self.map_rng
         for i in np.flatnonzero(which):
+            old_cold = self.food[i][self.patch[i] & self.cold[i]]
+            old_warm = self.food[i][self.patch[i] & ~self.cold[i]]
             self._lay_out(i, rng)
             self.food[i] = 0
-            self.food[i][self.patch[i]] = rng.uniform(0, 1, self.patch[i].sum())
+            new_cold, new_warm = self.patch[i] & self.cold[i], self.patch[i] & ~self.cold[i]
+            assert new_cold.sum() == len(old_cold) and new_warm.sum() == len(old_warm)
+            self.food[i][new_cold] = rng.permutation(old_cold)
+            self.food[i][new_warm] = rng.permutation(old_warm)
             free = np.flatnonzero(~self.cold[i] & ~self.water[i])
             c = rng.choice(free)
             self.pos[i] = (c // s, c % s)
@@ -295,7 +304,7 @@ class Worlds:
         if collapse.any():
             self._wake(collapse)
         if self.cfg.new_map_every:
-            switch = self.clock % self.cfg.new_map_every == 0
+            switch = self.clock % self.cfg.new_map_every == self.cfg.new_map_offset
             if switch.any():
                 self._new_maps(switch)
         return self.observe(), reward, collapse, info

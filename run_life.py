@@ -37,7 +37,8 @@ CHILDHOODS = {"scarce": SCARCE, "rich": RICH, "adult": ADULT, "none": None}
 # version 1: adult worlds a life can branch into after one childhood; the number fixes each branch's
 # random seed, so a branch does not depend on which other branches run in the same process
 BRANCHES = {"standard": (0, ADULT), "richer": (1, ADULT_RICHER), "poorer": (2, ADULT_POORER)}
-COLUMNS = ["phase", "step", "wellbeing", "collapses_per_1k", "starved_per_1k", "thirst_per_1k", "froze_per_1k", "energy", "water", "temp",
+COLUMNS = ["phase", "step", "wellbeing", "collapses_per_1k", "starved_per_1k", "thirst_per_1k", "froze_per_1k",
+           "collapses_per_1k_normal", "collapses_per_1k_drought", "energy", "water", "temp",
            "carry", "carry_sated", "carry_sated_normal", "carry_sated_drought",
            "cold_day", "cold_day_normal", "cold_day_drought", "cold_night", "drought_share", "drinks_per_100", "meals_per_100"]
 
@@ -57,6 +58,8 @@ def summarise(infos, rewards):
         "starved_per_1k": float(get("starved").mean() * 1000),
         "thirst_per_1k": float(get("thirst").mean() * 1000),
         "froze_per_1k": float(get("froze").mean() * 1000),
+        "collapses_per_1k_normal": mean_where(get("collapse"), ~drought) * 1000,
+        "collapses_per_1k_drought": mean_where(get("collapse"), drought) * 1000,
         "energy": float(get("energy").mean()),
         "water": float(get("water").mean()),
         "temp": float(get("temp").mean()),
@@ -111,6 +114,8 @@ def main():
                    help="'last' re-initialises the second hidden layer and both heads at the move")
     p.add_argument("--new-map-every", type=int, default=0,
                    help="version 1: a fresh layout every N steps of each world's clock (0 = never, as in version 0)")
+    p.add_argument("--new-map-offset", type=int, default=0,
+                   help="version 1: ... at the steps where the clock modulo N equals this")
     p.add_argument("--branches", nargs="+", choices=list(BRANCHES),
                    help="version 1: after one childhood, one adult life in each of these adult worlds")
     p.add_argument("--out", default="runs")
@@ -178,7 +183,7 @@ def main_v1(args):
     torch.set_num_threads(args.threads)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    maps = lambda cfg: replace(cfg, new_map_every=args.new_map_every)
+    maps = lambda cfg: replace(cfg, new_map_every=args.new_map_every, new_map_offset=args.new_map_offset)
     name = f"{args.childhood}_s{args.seed}"
     child_cfg = CHILDHOODS[args.childhood]
     if args.childhood == "scarce" and args.scarce_regrow is not None:

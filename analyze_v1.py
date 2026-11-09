@@ -51,7 +51,7 @@ def family(name, tests, lives, seeds, rng, value):
     print(f"\n{name} (Holm over {len(stats)} tests)")
     for t, a in zip(stats, adj):
         t["p_holm"] = float(a)
-        print(f"  {t['test']:24s} {t['measure']:17s} n={t['n']:2d}  {t['mean_difference']:+.3f}  "
+        print(f"  {t['test']:30s} {t['measure']:24s} n={t['n']:2d}  {t['mean_difference']:+.3f}  "
               f"[{t['ci95'][0]:+.3f}, {t['ci95'][1]:+.3f}]  p={t['p']:.5f}  p_holm={a:.5f}  r={t['rank_biserial']:+.2f}")
     return stats
 
@@ -72,9 +72,15 @@ def main():
         "FAMILY A: frozen check in the standard adult world", [
             (f"{x} - {y}", m, x, y, "standard") for x, y in contrasts for m in MEASURES],
         lives, args.seeds, rng, frozen)
+    # the richer world is richer than both childhoods only outside droughts, so its two phases are
+    # tested apart; the poorer world is poorer than both in both phases
+    phase_cols = {"normal": ["carry_sated_normal", "cold_day_normal", "collapses_per_1k_normal"],
+                  "drought": ["carry_sated_drought", "cold_day_drought", "collapses_per_1k_drought"],
+                  "all": MEASURES}
     result["B_frozen_mirror"] = family(
         "FAMILY B: scarce - rich, frozen check in the mirror adult worlds", [
-            (f"scarce - rich, {b}", m, "scarce", "rich", b) for b in ["richer", "poorer"] for m in MEASURES],
+            (f"scarce - rich, {b} {ph}", m, "scarce", "rich", b)
+            for b, ph in [("richer", "normal"), ("richer", "drought"), ("poorer", "all")] for m in phase_cols[ph]],
         lives, args.seeds, rng, frozen)
     result["C_late_collapses"] = family(
         "FAMILY C: collapses in the last 10% of adult life, standard adult world", [

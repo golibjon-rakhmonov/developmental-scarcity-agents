@@ -80,8 +80,10 @@ A review of version 0 found that every body lived its whole childhood on one map
 learned their maps by heart, and that the scarce childhood was closer to the adult world than the
 rich one. Version 1 changes three things; the plan is in `PREREGISTRATION_V1.md`.
 
-- Every world gets a fresh layout every 1,000 steps of its clock (`--new-map-every 1000`). Two
-  agents with the same seed still see the same sequence of maps.
+- Every world gets a fresh layout every 1,000 steps of its clock, halfway between drought edges
+  (`--new-map-every 1000 --new-map-offset 500`). Food moves with the map: amounts on the old cold
+  patches go to the new cold patches, warm to warm. Two agents with the same seed still see the same
+  sequence of maps.
 - A third childhood, `adult`: 3M steps in the adult world itself, the same amount of training.
 - After one childhood the agent lives three adult lives, in the standard adult world and in two
   mirror worlds, one richer and one poorer than both childhoods. A home check (100k steps without
@@ -90,7 +92,8 @@ rich one. Version 1 changes three things; the plan is in `PREREGISTRATION_V1.md`
     .venv/bin/python run_v1.py --parallel $(( $(sysctl -n hw.ncpu) - 1 ))     # 80 processes, results in runs_v1/
     .venv/bin/python analyze_v1.py
 
-Without `--new-map-every` and `--branches`, `run_life.py` behaves exactly as in version 0.
+Without `--new-map-every` and `--branches`, `run_life.py` lives exactly the same lives as in
+version 0; its CSV only has two more columns (collapses outside droughts and during droughts).
 
 ## Output
 

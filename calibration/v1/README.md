@@ -1,4 +1,9 @@
-# Calibration of version 1
+# Calibration of version 1, first round
+
+Superseded by `../v1b`. In this round maps changed at clock 0 modulo 1,000 (so every drought began
+and ended on a map change) and a new map got fresh food drawn uniformly between 0 and 1 on every
+patch (which gave food to agents that eat patches clean and took it from the others). Both were
+fixed after the second review; see `PREREGISTRATION_V1.md`.
 
 Seeds 900 and above, with the code of the commit that adds this folder. `run_cal.sh` reruns it
 (`PYTHON=.venv/bin/python calibration/v1/run_cal.sh`). Maps change every 1,000 steps in every world.

@@ -19,6 +19,7 @@ from pathlib import Path
 CHILDHOODS = ["scarce", "rich", "adult", "none"]
 BRANCHES = ["standard", "richer", "poorer"]
 NEW_MAP_EVERY = 1000
+NEW_MAP_OFFSET = 500    # maps change halfway between drought starts and ends, not on them
 SEEDS = range(100, 120)
 
 
@@ -29,7 +30,7 @@ def jobs(seeds, out):
             if all((out / f"{c}_s{s}_{b}_end.pt").exists() for b in BRANCHES):
                 continue
             cmd = [sys.executable, "run_life.py", "--childhood", c, "--seed", str(s), "--out", str(out),
-                   "--new-map-every", str(NEW_MAP_EVERY), "--branches", *BRANCHES]
+                   "--new-map-every", str(NEW_MAP_EVERY), "--new-map-offset", str(NEW_MAP_OFFSET), "--branches", *BRANCHES]
             todo.append((f"{c}_s{s}", cmd))
     # the longest lives first, so the last minutes are not spent waiting for one slow process
     return sorted(todo, key=lambda j: j[0].startswith("none"))
@@ -67,9 +68,10 @@ def main():
             name, code, secs, err = f.result()
             elapsed = (time.time() - started) / 60
             left = elapsed / k * (len(todo) - k)
-            status = "done" if code == 0 else "FAILED"
+            # a negative code means the process was killed by a signal (for example out of memory)
+            status = "done" if code == 0 else "FAILED" if code > 0 else f"KILLED (signal {-code})"
             print(f"[{k}/{len(todo)}] {status} {name} in {secs / 60:.1f} min | {elapsed:.0f} min so far, about {left:.0f} left", flush=True)
-            if code != 0 and code > 0:
+            if code != 0:
                 failed += 1
                 print(err, flush=True)
     except KeyboardInterrupt:
@@ -80,7 +82,10 @@ def main():
         print("\nstopped. Finished lives are kept; run the same command again to continue.", flush=True)
         os._exit(130)
     pool.shutdown()
-    print(f"finished, {failed} failed. Next: .venv/bin/python analyze_v1.py", flush=True)
+    if failed:
+        print(f"finished, {failed} failed or killed. Run the same command again to redo them.", flush=True)
+    else:
+        print("finished, none failed. Next: .venv/bin/python analyze_v1.py", flush=True)
 
 
 if __name__ == "__main__":
