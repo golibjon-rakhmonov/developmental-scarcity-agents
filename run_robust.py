@@ -4,12 +4,14 @@
     .venv/bin/python run_robust.py --parallel 10
     .venv/bin/python run_robust.py --only replication
 
-Lives that already finished are skipped, so the script can be stopped and
-started again. Results go to runs_robust/<variant>/.
+Lives that already finished are skipped, so the script can be stopped with
+one Ctrl+C and started again. Results go to runs_robust/<variant>/.
 """
 import argparse
+import os
 import subprocess
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -43,10 +45,19 @@ def jobs(only):
     return out
 
 
+RUNNING, LOCK = set(), threading.Lock()
+
+
 def run(name, cmd):
     started = time.time()
-    r = subprocess.run(cmd, capture_output=True, text=True)
-    return name, r.returncode, time.time() - started, r.stderr[-800:]
+    # own session, so Ctrl+C reaches only this script, which then stops the lives itself
+    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True, start_new_session=True)
+    with LOCK:
+        RUNNING.add(proc)
+    _, err = proc.communicate()
+    with LOCK:
+        RUNNING.discard(proc)
+    return name, proc.returncode, time.time() - started, (err or "")[-800:]
 
 
 def main():
@@ -57,7 +68,8 @@ def main():
     todo = jobs(args.only)
     print(f"{len(todo)} lives to run, {args.parallel} at a time", flush=True)
     started, failed = time.time(), 0
-    with ThreadPoolExecutor(args.parallel) as pool:
+    pool = ThreadPoolExecutor(args.parallel)
+    try:
         futures = [pool.submit(run, name, cmd) for name, cmd in todo]
         for k, f in enumerate(as_completed(futures), 1):
             name, code, secs, err = f.result()
@@ -65,9 +77,17 @@ def main():
             left = elapsed / k * (len(todo) - k)
             status = "done" if code == 0 else "FAILED"
             print(f"[{k}/{len(todo)}] {status} {name} in {secs / 60:.1f} min | {elapsed:.0f} min so far, about {left:.0f} left", flush=True)
-            if code != 0:
+            if code != 0 and code > 0:
                 failed += 1
                 print(err, flush=True)
+    except KeyboardInterrupt:
+        pool.shutdown(wait=False, cancel_futures=True)
+        with LOCK:
+            for proc in RUNNING:
+                proc.kill()
+        print("\nstopped. Finished lives are kept; run the same command again to continue.", flush=True)
+        os._exit(130)
+    pool.shutdown()
     print(f"finished, {failed} failed. Next: .venv/bin/python analyze_robust.py", flush=True)
 
 
