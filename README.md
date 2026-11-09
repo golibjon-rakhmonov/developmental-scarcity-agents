@@ -92,6 +92,12 @@ rich one. Version 1 changes three things; the plan is in `PREREGISTRATION_V1.md`
     .venv/bin/python run_v1.py --parallel $(( $(sysctl -n hw.ncpu) - 1 ))     # 80 processes, results in runs_v1/
     .venv/bin/python analyze_v1.py
 
+The replication with directional predictions (`PREREGISTRATION_V1_REPLICATION.md`) runs the same
+lives on seeds 120-139:
+
+    .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 120 139) --out runs_v1_rep
+    .venv/bin/python analyze_v1_rep.py
+
 Without `--new-map-every` and `--branches`, `run_life.py` lives exactly the same lives as in
 version 0; its CSV only has two more columns (collapses outside droughts and during droughts).
 
