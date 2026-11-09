@@ -18,13 +18,13 @@ import copy
 import csv
 import json
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import numpy as np
 import torch
 
-from agent import Agent
+from agent import Agent, Net
 from world import ADULT, N_ACTIONS, OBS_DIM, RICH, SCARCE, Worlds
 
 CHILDHOODS = {"scarce": SCARCE, "rich": RICH, "none": None}
@@ -97,6 +97,9 @@ def main():
     p.add_argument("--threads", type=int, default=1)
     p.add_argument("--lr", type=float, default=3e-4)
     p.add_argument("--gamma", type=float, default=0.995)
+    p.add_argument("--scarce-regrow", type=float, help="food regrowth of the scarce childhood world (default as in world.py)")
+    p.add_argument("--reset", choices=["no", "last"], default="no",
+                   help="'last' re-initialises the second hidden layer and both heads at the move")
     p.add_argument("--out", default="runs")
     args = p.parse_args()
 
@@ -106,6 +109,8 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     name = f"{args.childhood}_s{args.seed}"
     child_cfg = CHILDHOODS[args.childhood]
+    if args.childhood == "scarce" and args.scarce_regrow is not None:
+        child_cfg = replace(child_cfg, regrow=args.scarce_regrow)
     meta = {"args": vars(args), "childhood": asdict(child_cfg) if child_cfg else None, "adult": asdict(ADULT)}
     (out / f"{name}.json").write_text(json.dumps(meta, indent=2))
 
@@ -121,6 +126,16 @@ def main():
             live(agent, child_world, args.child_steps, "child", write)
             print(f"{name}: childhood done in {time.time() - started:.0f}s", flush=True)
         torch.save(agent.net.state_dict(), out / f"{name}_after_childhood.pt")
+
+        if args.reset == "last":
+            # keep the first layer, give everything after it a fresh start (the same fresh
+            # weights for every childhood with this seed), and forget the optimiser's history
+            torch.manual_seed(args.seed + 10_000)
+            fresh = Net(OBS_DIM, N_ACTIONS)
+            for part in ("policy", "value"):
+                getattr(agent.net, part).load_state_dict(getattr(fresh, part).state_dict())
+            agent.net.body[2].load_state_dict(fresh.body[2].state_dict())
+            agent.opt = torch.optim.Adam(agent.net.parameters(), lr=args.lr, eps=1e-5)
 
         # the same agent, unchanged, in a fresh set of adult worlds
         frozen = copy.deepcopy(agent)

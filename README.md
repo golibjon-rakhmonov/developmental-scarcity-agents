@@ -65,6 +65,15 @@ Watching:
     .venv/bin/python watch.py runs/rich_s0_end.pt --world rich      # or back in a rich world
     .venv/bin/python summary.py                                    # table by condition and stage
 
+## Robustness check
+
+After the pilot: a replication on seeds 10-29, four variations (longer and shorter childhood,
+harsher and milder scarcity) and a layer reset at the move. The plan is in
+`PREREGISTRATION_ROBUSTNESS.md`.
+
+    .venv/bin/python run_robust.py          # all 160 lives, results in runs_robust/
+    .venv/bin/python analyze_robust.py      # the pre-registered tests
+
 ## Output
 
 For each life, in `runs/`:
