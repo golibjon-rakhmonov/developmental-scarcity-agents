@@ -39,8 +39,8 @@ class Net(nn.Module):
 
 class Agent:
     def __init__(self, obs_dim, n_actions, lr=3e-4, gamma=0.995, lam=0.95, clip=0.2,
-                 epochs=4, minibatches=4, entropy=0.01, value_coef=0.5, max_grad=0.5):
-        self.net = Net(obs_dim, n_actions)
+                 epochs=4, minibatches=4, entropy=0.01, value_coef=0.5, max_grad=0.5, hidden=128):
+        self.net = Net(obs_dim, n_actions, hidden)
         self.opt = torch.optim.Adam(self.net.parameters(), lr=lr, eps=1e-5)
         self.gamma, self.lam, self.clip = gamma, lam, clip
         self.epochs, self.minibatches = epochs, minibatches

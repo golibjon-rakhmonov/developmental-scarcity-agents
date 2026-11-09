@@ -118,6 +118,8 @@ def main():
                    help="version 1: ... at the steps where the clock modulo N equals this")
     p.add_argument("--branches", nargs="+", choices=list(BRANCHES),
                    help="version 1: after one childhood, one adult life in each of these adult worlds")
+    p.add_argument("--hidden", type=int, default=128,
+                   help="units in each hidden layer (robustness check; 128 in every registered run before it)")
     p.add_argument("--wave-on", type=int, help="experiment 2: mean length of a harvest in the unreliable childhood")
     p.add_argument("--wave-off", type=int, help="experiment 2: mean length of an empty spell in the unreliable childhood")
     p.add_argument("--out", default="runs")
@@ -174,7 +176,7 @@ def reset_last(agent, args):
     """Keep the first layer, give everything after it a fresh start (the same fresh weights for every
     childhood with this seed), and forget the optimiser's history."""
     torch.manual_seed(args.seed + 10_000)
-    fresh = Net(OBS_DIM, N_ACTIONS)
+    fresh = Net(OBS_DIM, N_ACTIONS, args.hidden)
     for part in ("policy", "value"):
         getattr(agent.net, part).load_state_dict(getattr(fresh, part).state_dict())
     agent.net.body[2].load_state_dict(fresh.body[2].state_dict())
@@ -199,7 +201,7 @@ def main_v1(args):
     (out / f"{name}.json").write_text(json.dumps(meta, indent=2))
 
     torch.manual_seed(args.seed)
-    agent = Agent(OBS_DIM, N_ACTIONS, lr=args.lr, gamma=args.gamma)
+    agent = Agent(OBS_DIM, N_ACTIONS, lr=args.lr, gamma=args.gamma, hidden=args.hidden)
     started = time.time()
     head = []          # childhood and home-check rows, written at the top of every branch file
     if child_cfg is not None:

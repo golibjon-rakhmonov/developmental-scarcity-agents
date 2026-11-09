@@ -114,6 +114,16 @@ wellbeing in calibration (`calibration/exp2/`). Seeds 140-169, five childhoods, 
     .venv/bin/python analyze_exp2.py
     .venv/bin/python analyze_v1_rep.py --runs runs_exp2 --seeds $(seq 140 169)     # second replication of version 1
 
+## Robustness to network size
+
+`PREREGISTRATION_NETSIZE.md`. Version 1 again with 64 and with 256 units per hidden layer instead of 128,
+seeds 170-189, scarce, rich and adult childhood:
+
+    .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 170 189) --childhoods scarce rich adult --hidden 64 --out runs_net64
+    .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 170 189) --childhoods scarce rich adult --hidden 256 --out runs_net256
+    .venv/bin/python analyze_v1_rep.py --runs runs_net64 --seeds $(seq 170 189)
+    .venv/bin/python analyze_v1_rep.py --runs runs_net256 --seeds $(seq 170 189)
+
 ## Output
 
 For each life, in `runs/`:
@@ -128,5 +138,5 @@ For each life, in `runs/`:
 
 Seeds 900 and above were used to calibrate the world. Seeds 0-9 are kept for the pilot itself and
 are run only after `PREREGISTRATION.md` is committed. Seeds 10-29 belong to the version 0 robustness
-check, seeds 100-119 to version 1, seeds 120-139 to its replication, seeds 140-169 to experiment 2.
+check, seeds 100-119 to version 1, seeds 120-139 to its replication, seeds 140-169 to experiment 2, seeds 170-189 to the network-size check.
 The calibration runs are in `calibration/`.
