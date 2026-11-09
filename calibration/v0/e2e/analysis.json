@@ -1,0 +1,102 @@
+{
+  "seeds": [
+    950,
+    951,
+    952
+  ],
+  "primary": {
+    "carry_sated": {
+      "n": 3,
+      "mean_difference": 0.0020733918919039612,
+      "p": 1.0,
+      "ci95": [
+        -0.058225154729149686,
+        0.03831238295681237
+      ],
+      "rank_biserial": 0.0,
+      "p_holm": 1.0
+    },
+    "cold_day": {
+      "n": 3,
+      "mean_difference": 0.023495783143941507,
+      "p": 0.25,
+      "ci95": [
+        0.01756032917969755,
+        0.03508036127875538
+      ],
+      "rank_biserial": 1.0,
+      "p_holm": 0.5
+    }
+  },
+  "secondary": {
+    "frozen_means": {
+      "carry_sated": {
+        "none": 0.232,
+        "rich": 0.147,
+        "scarce": 0.149
+      },
+      "cold_day": {
+        "none": 0.152,
+        "rich": 0.003,
+        "scarce": 0.027
+      },
+      "carry_sated_normal": {
+        "none": 0.249,
+        "rich": 0.154,
+        "scarce": 0.16
+      },
+      "carry_sated_drought": {
+        "none": 0.148,
+        "rich": 0.104,
+        "scarce": 0.103
+      },
+      "cold_day_normal": {
+        "none": 0.148,
+        "rich": 0.004,
+        "scarce": 0.028
+      },
+      "cold_day_drought": {
+        "none": 0.155,
+        "rich": 0.002,
+        "scarce": 0.023
+      },
+      "collapses_per_1k": {
+        "none": 3.646,
+        "rich": 1.758,
+        "scarce": 1.912
+      },
+      "starved_per_1k": {
+        "none": 0.871,
+        "rich": 1.066,
+        "scarce": 0.724
+      },
+      "thirst_per_1k": {
+        "none": 1.733,
+        "rich": 0.684,
+        "scarce": 1.123
+      },
+      "froze_per_1k": {
+        "none": 1.042,
+        "rich": 0.008,
+        "scarce": 0.065
+      },
+      "wellbeing": {
+        "none": 0.805,
+        "rich": 0.895,
+        "scarce": 0.885
+      }
+    },
+    "difference_by_block": {
+      "carry_sated": {
+        "200k": 0.08516091585092583,
+        "400k": 0.08411583345343072,
+        "600k": 0.09317046305795419
+      },
+      "cold_day": {
+        "200k": 0.008211059198976597,
+        "400k": 0.010556121975179975,
+        "600k": -0.004940369545990677
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "args": {
+    "childhood": "none",
+    "seed": 903,
+    "child_steps": 3000000,
+    "frozen_steps": 100000,
+    "adult_steps": 1500000,
+    "worlds": 32,
+    "threads": 1,
+    "lr": 0.0003,
+    "gamma": 0.995,
+    "scarce_regrow": null,
+    "reset": "no",
+    "new_map_every": 1000,
+    "branches": [
+      "poorer",
+      "richer"
+    ],
+    "out": "../calv1/mirror"
+  },
+  "childhood": null,
+  "branches": {
+    "richer": {
+      "size": 11,
+      "n_patches": 8,
+      "cold_patch_share": 0.5,
+      "regrow": 0.04,
+      "n_water": 2,
+      "n_shelters": 2,
+      "day_length": 100,
+      "drought_every": 3000,
+      "drought_length": 1000,
+      "drought_regrow": 0.0005,
+      "new_map_every": 1000
+    },
+    "poorer": {
+      "size": 11,
+      "n_patches": 8,
+      "cold_patch_share": 0.5,
+      "regrow": 0.0008,
+      "n_water": 2,
+      "n_shelters": 2,
+      "day_length": 100,
+      "drought_every": 3000,
+      "drought_length": 1000,
+      "drought_regrow": 0.0003,
+      "new_map_every": 1000
+    }
+  }
+}

@@ -74,6 +74,24 @@ harsher and milder scarcity) and a layer reset at the move. The plan is in
     .venv/bin/python run_robust.py          # all 160 lives, results in runs_robust/
     .venv/bin/python analyze_robust.py      # the pre-registered tests
 
+## Version 1
+
+A review of version 0 found that every body lived its whole childhood on one map, so the agents
+learned their maps by heart, and that the scarce childhood was closer to the adult world than the
+rich one. Version 1 changes three things; the plan is in `PREREGISTRATION_V1.md`.
+
+- Every world gets a fresh layout every 1,000 steps of its clock (`--new-map-every 1000`). Two
+  agents with the same seed still see the same sequence of maps.
+- A third childhood, `adult`: 3M steps in the adult world itself, the same amount of training.
+- After one childhood the agent lives three adult lives, in the standard adult world and in two
+  mirror worlds, one richer and one poorer than both childhoods. A home check (100k steps without
+  learning in its own kind of world, on maps it has never seen) comes before them.
+
+    .venv/bin/python run_v1.py --parallel $(( $(sysctl -n hw.ncpu) - 1 ))     # 80 processes, results in runs_v1/
+    .venv/bin/python analyze_v1.py
+
+Without `--new-map-every` and `--branches`, `run_life.py` behaves exactly as in version 0.
+
 ## Output
 
 For each life, in `runs/`:
@@ -87,4 +105,5 @@ For each life, in `runs/`:
 ## Seeds
 
 Seeds 900 and above were used to calibrate the world. Seeds 0-9 are kept for the pilot itself and
-are run only after `PREREGISTRATION.md` is committed.
+are run only after `PREREGISTRATION.md` is committed. Seeds 10-29 belong to the version 0 robustness
+check, seeds 100-119 to version 1. The calibration runs are in `calibration/`.

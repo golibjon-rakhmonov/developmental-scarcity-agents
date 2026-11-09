@@ -1,0 +1,38 @@
+{
+  "args": {
+    "childhood": "scarce",
+    "seed": 950,
+    "child_steps": 204800,
+    "frozen_steps": 40960,
+    "adult_steps": 409600,
+    "worlds": 32,
+    "threads": 1,
+    "lr": 0.0003,
+    "gamma": 0.995,
+    "out": "e2e"
+  },
+  "childhood": {
+    "size": 11,
+    "n_patches": 8,
+    "cold_patch_share": 0.5,
+    "regrow": 0.001,
+    "n_water": 2,
+    "n_shelters": 2,
+    "day_length": 100,
+    "drought_every": 0,
+    "drought_length": 0,
+    "drought_regrow": 0.0
+  },
+  "adult": {
+    "size": 11,
+    "n_patches": 8,
+    "cold_patch_share": 0.5,
+    "regrow": 0.004,
+    "n_water": 2,
+    "n_shelters": 2,
+    "day_length": 100,
+    "drought_every": 3000,
+    "drought_length": 1000,
+    "drought_regrow": 0.0005
+  }
+}

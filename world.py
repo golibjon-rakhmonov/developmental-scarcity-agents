@@ -63,11 +63,22 @@ class WorldConfig:
     drought_every: int = 0           # 0 means no droughts
     drought_length: int = 0
     drought_regrow: float = 0.0
+    new_map_every: int = 0           # a fresh layout every this many steps of a world's clock; 0 = never (version 0)
+
+    def mean_regrow(self):
+        """Food added per patch per step, averaged over the drought cycle."""
+        if self.drought_every == 0:
+            return self.regrow
+        dry = self.drought_length / self.drought_every
+        return (1 - dry) * self.regrow + dry * self.drought_regrow
 
 
 SCARCE = WorldConfig(regrow=0.001)
 RICH = WorldConfig(regrow=0.02)
 ADULT = WorldConfig(regrow=0.004, drought_every=3000, drought_length=1000, drought_regrow=0.0005)
+# mirror adult worlds for version 1: same droughts, richer than both childhoods or poorer than both
+ADULT_RICHER = WorldConfig(regrow=0.04, drought_every=3000, drought_length=1000, drought_regrow=0.0005)
+ADULT_POORER = WorldConfig(regrow=0.0008, drought_every=3000, drought_length=1000, drought_regrow=0.0003)
 
 
 class Worlds:
@@ -110,9 +121,14 @@ class Worlds:
         wp = np.pad(self.water, ((0, 0), (1, 1), (1, 1)))
         self.near_water = wp[:, 1:-1, 1:-1] | wp[:, :-2, 1:-1] | wp[:, 2:, 1:-1] | wp[:, 1:-1, :-2] | wp[:, 1:-1, 2:]
         self._rows = np.arange(n)
+        # version 1: layouts keep changing, drawn from their own generator so that two agents with the
+        # same seed see the same sequence of maps whatever they do (collapses draw from self.rng)
+        if config.new_map_every:
+            self.map_rng = np.random.default_rng(rng.integers(2**63))
 
-    def _lay_out(self, i):
-        s, rng, cfg = self.cfg.size, self.rng, self.cfg
+    def _lay_out(self, i, rng=None):
+        s, cfg = self.cfg.size, self.cfg
+        rng = self.rng if rng is None else rng
         band = s // 3
         side = rng.integers(4)               # which edge of the map is cold
         cold = np.zeros((s, s), bool)
@@ -132,6 +148,30 @@ class Worlds:
         shelter = np.zeros(s * s, bool); shelter[rest[cfg.n_water:]] = True
         self.cold[i], self.patch[i] = cold, patch.reshape(s, s)
         self.water[i], self.shelter[i] = water.reshape(s, s), shelter.reshape(s, s)
+
+    def _derive(self):
+        """Recompute everything that follows from the layouts (after some worlds got a new map)."""
+        n, s = self.n, self.cfg.size
+        pad = lambda a, v: np.pad(a, ((0, 0), (R, R), (R, R)), constant_values=v)
+        inside = np.ones((n, s, s), bool)
+        self.static = np.stack([pad(self.water, 0), pad(self.cold, 0), pad(self.shelter, 0),
+                                pad(~inside, 1)], 1).astype(np.float32)
+        self.water_smell = (self.water.reshape(n, -1).astype(np.float32) @ self.spread).reshape(n, s, s) / self.cfg.n_water
+        wp = np.pad(self.water, ((0, 0), (1, 1), (1, 1)))
+        self.near_water = wp[:, 1:-1, 1:-1] | wp[:, :-2, 1:-1] | wp[:, 2:, 1:-1] | wp[:, 1:-1, :-2] | wp[:, 1:-1, 2:]
+
+    def _new_maps(self, which):
+        """Give the worlds in `which` a fresh layout and fresh food, and put their agents somewhere on warm
+        ground. The body (energy, water, temperature, food carried) is kept: the agent has moved, not woken up."""
+        s, rng = self.cfg.size, self.map_rng
+        for i in np.flatnonzero(which):
+            self._lay_out(i, rng)
+            self.food[i] = 0
+            self.food[i][self.patch[i]] = rng.uniform(0, 1, self.patch[i].sum())
+            free = np.flatnonzero(~self.cold[i] & ~self.water[i])
+            c = rng.choice(free)
+            self.pos[i] = (c // s, c % s)
+        self._derive()
 
     def _wake(self, who):
         """Agents in `who` start (or restart after a collapse) on warm ground with a fresh body."""
@@ -254,4 +294,8 @@ class Worlds:
         }
         if collapse.any():
             self._wake(collapse)
+        if self.cfg.new_map_every:
+            switch = self.clock % self.cfg.new_map_every == 0
+            if switch.any():
+                self._new_maps(switch)
         return self.observe(), reward, collapse, info

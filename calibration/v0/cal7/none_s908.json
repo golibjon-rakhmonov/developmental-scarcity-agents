@@ -1,0 +1,27 @@
+{
+  "args": {
+    "childhood": "none",
+    "seed": 908,
+    "child_steps": 2000000,
+    "frozen_steps": 4096,
+    "adult_steps": 2000000,
+    "worlds": 32,
+    "threads": 1,
+    "lr": 0.0003,
+    "gamma": 0.995,
+    "out": "cal7"
+  },
+  "childhood": null,
+  "adult": {
+    "size": 11,
+    "n_patches": 8,
+    "cold_patch_share": 0.5,
+    "regrow": 0.004,
+    "n_water": 2,
+    "n_shelters": 2,
+    "day_length": 100,
+    "drought_every": 3000,
+    "drought_length": 1000,
+    "drought_regrow": 0.0005
+  }
+}
