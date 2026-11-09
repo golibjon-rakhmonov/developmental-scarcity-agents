@@ -4,8 +4,9 @@
     python curves.py --live       redraw every 20 seconds while lives are running
     python curves.py --save curves.png
 
-Left half of each panel is childhood, then the dashed line marks the move to
-the adult world. Thin lines are single seeds, the thick line is their mean.
+Left of the dashed line is childhood, right of it the adult world. Lives
+without a childhood start at the dashed line. Thin lines are single seeds, the
+thick line is their mean.
 """
 import argparse
 from pathlib import Path
@@ -23,19 +24,20 @@ PANELS = [("wellbeing", "wellbeing (1 = all needs met)"),
 
 
 def load(folder):
+    frames = {f.stem: pd.read_csv(f) for f in sorted(Path(folder).glob("*.csv"))}
+    frames = {k: d for k, d in frames.items() if not d.empty}
+    # lives without a childhood are drawn from the move on, so all adult lives line up
+    childhood = max((d[d.phase == "child"].step.max() for d in frames.values() if (d.phase == "child").any()), default=0)
     lives = {}
-    for f in sorted(Path(folder).glob("*.csv")):
-        d = pd.read_csv(f)
-        if d.empty:
-            continue
+    for name, d in frames.items():
         child = d[d.phase == "child"]
         adult = d[d.phase == "adult"].copy()
-        offset = child.step.max() if not child.empty else 0
+        offset = child.step.max() if not child.empty else childhood
         adult["step"] = adult.step + offset
         d = pd.concat([child, adult])
         d["step_m"] = d.step / 1e6
         moved = offset / 1e6 if (offset and not adult.empty) else None
-        lives[f.stem] = (d, moved)
+        lives[name] = (d, moved)
     return lives
 
 
