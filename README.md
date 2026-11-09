@@ -101,6 +101,19 @@ lives on seeds 120-139:
 Without `--new-map-every` and `--branches`, `run_life.py` lives exactly the same lives as in
 version 0; its CSV only has two more columns (collapses outside droughts and during droughts).
 
+Where in the network the trace of childhood lives (an exploratory analysis of the networks saved at the
+move, no learning): `trace_v1.py`, results in `trace_v1/`.
+
+## Experiment 2
+
+`PREREGISTRATION_EXP2.md`. Two more childhoods: a hungry one (steady, 0.00045 food per patch per step)
+and an unreliable one (0.001 on average, but in harvests and empty spells of random length), matched on
+wellbeing in calibration (`calibration/exp2/`). Seeds 140-169, five childhoods, 150 processes:
+
+    .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 140 169) --childhoods scarce hungry unreliable rich adult --out runs_exp2
+    .venv/bin/python analyze_exp2.py
+    .venv/bin/python analyze_v1_rep.py --runs runs_exp2 --seeds $(seq 140 169)     # second replication of version 1
+
 ## Output
 
 For each life, in `runs/`:
@@ -115,4 +128,5 @@ For each life, in `runs/`:
 
 Seeds 900 and above were used to calibrate the world. Seeds 0-9 are kept for the pilot itself and
 are run only after `PREREGISTRATION.md` is committed. Seeds 10-29 belong to the version 0 robustness
-check, seeds 100-119 to version 1. The calibration runs are in `calibration/`.
+check, seeds 100-119 to version 1, seeds 120-139 to its replication, seeds 140-169 to experiment 2.
+The calibration runs are in `calibration/`.

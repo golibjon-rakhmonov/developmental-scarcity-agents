@@ -2,6 +2,7 @@
 
     .venv/bin/python run_v1.py --parallel 17
     .venv/bin/python run_v1.py --seeds 900 901 --out runs_v1_test      # any other seeds, e.g. to test
+    .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 140 169) --childhoods scarce hungry unreliable rich adult --out runs_exp2
 
 Each process lives one childhood and then one adult life in each of the three adult worlds.
 Lives that already finished are skipped, so the script can be stopped with one Ctrl+C and started
@@ -23,10 +24,10 @@ NEW_MAP_OFFSET = 500    # maps change halfway between drought starts and ends, n
 SEEDS = range(100, 120)
 
 
-def jobs(seeds, out):
+def jobs(seeds, out, childhoods=CHILDHOODS):
     todo = []
     for s in seeds:
-        for c in CHILDHOODS:
+        for c in childhoods:
             if all((out / f"{c}_s{s}_{b}_end.pt").exists() for b in BRANCHES):
                 continue
             cmd = [sys.executable, "run_life.py", "--childhood", c, "--seed", str(s), "--out", str(out),
@@ -55,10 +56,13 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--parallel", type=int, default=8)
     p.add_argument("--seeds", type=int, nargs="+", default=list(SEEDS))
+    p.add_argument("--childhoods", nargs="+", default=CHILDHOODS,
+                   choices=["scarce", "rich", "adult", "unreliable", "hungry", "none"],
+                   help="experiment 2 adds the unreliable and the hungry childhood; the default is version 1")
     p.add_argument("--out", default="runs_v1")
     args = p.parse_args()
     out = Path(args.out)
-    todo = jobs(args.seeds, out)
+    todo = jobs(args.seeds, out, args.childhoods)
     print(f"{len(todo)} lives to run, {args.parallel} at a time", flush=True)
     started, failed = time.time(), 0
     pool = ThreadPoolExecutor(args.parallel)

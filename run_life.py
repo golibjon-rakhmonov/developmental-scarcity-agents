@@ -31,9 +31,9 @@ import numpy as np
 import torch
 
 from agent import Agent, Net
-from world import ADULT, ADULT_POORER, ADULT_RICHER, N_ACTIONS, OBS_DIM, RICH, SCARCE, Worlds
+from world import ADULT, ADULT_POORER, ADULT_RICHER, N_ACTIONS, OBS_DIM, HUNGRY, RICH, SCARCE, UNRELIABLE, Worlds
 
-CHILDHOODS = {"scarce": SCARCE, "rich": RICH, "adult": ADULT, "none": None}
+CHILDHOODS = {"scarce": SCARCE, "rich": RICH, "adult": ADULT, "unreliable": UNRELIABLE, "hungry": HUNGRY, "none": None}
 # version 1: adult worlds a life can branch into after one childhood; the number fixes each branch's
 # random seed, so a branch does not depend on which other branches run in the same process
 BRANCHES = {"standard": (0, ADULT), "richer": (1, ADULT_RICHER), "poorer": (2, ADULT_POORER)}
@@ -118,6 +118,8 @@ def main():
                    help="version 1: ... at the steps where the clock modulo N equals this")
     p.add_argument("--branches", nargs="+", choices=list(BRANCHES),
                    help="version 1: after one childhood, one adult life in each of these adult worlds")
+    p.add_argument("--wave-on", type=int, help="experiment 2: mean length of a harvest in the unreliable childhood")
+    p.add_argument("--wave-off", type=int, help="experiment 2: mean length of an empty spell in the unreliable childhood")
     p.add_argument("--out", default="runs")
     args = p.parse_args()
     if args.branches:
@@ -188,6 +190,8 @@ def main_v1(args):
     child_cfg = CHILDHOODS[args.childhood]
     if args.childhood == "scarce" and args.scarce_regrow is not None:
         child_cfg = replace(child_cfg, regrow=args.scarce_regrow)
+    if args.childhood == "unreliable" and args.wave_on:
+        child_cfg = replace(child_cfg, wave_on=args.wave_on, wave_off=args.wave_off)
     child_cfg = maps(child_cfg) if child_cfg is not None else None
     branches = sorted(args.branches, key=lambda b: BRANCHES[b][0])
     meta = {"args": vars(args), "childhood": asdict(child_cfg) if child_cfg else None,

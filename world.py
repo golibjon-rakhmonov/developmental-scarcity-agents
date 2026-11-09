@@ -65,9 +65,17 @@ class WorldConfig:
     drought_regrow: float = 0.0
     new_map_every: int = 0           # a fresh layout every this many steps of a world's clock; 0 = never (version 0)
     new_map_offset: int = 0          # ... when the clock modulo new_map_every equals this
+    # experiment 2, the unreliable childhood: instead of droughts on a fixed cycle, food comes in waves of
+    # random length. A harvest (food grows at `regrow`) lasts wave_on steps on average, an empty spell (food
+    # grows at `drought_regrow`) wave_off steps on average; 0 = no waves
+    wave_on: int = 0
+    wave_off: int = 0
 
     def mean_regrow(self):
-        """Food added per patch per step, averaged over the drought cycle."""
+        """Food added per patch per step, averaged over the drought cycle (or the waves)."""
+        if self.wave_on:
+            on = self.wave_on / (self.wave_on + self.wave_off)
+            return on * self.regrow + (1 - on) * self.drought_regrow
         if self.drought_every == 0:
             return self.regrow
         dry = self.drought_length / self.drought_every
@@ -80,6 +88,12 @@ ADULT = WorldConfig(regrow=0.004, drought_every=3000, drought_length=1000, droug
 # mirror adult worlds for version 1: same droughts, richer than both childhoods or poorer than both
 ADULT_RICHER = WorldConfig(regrow=0.04, drought_every=3000, drought_length=1000, drought_regrow=0.0005)
 ADULT_POORER = WorldConfig(regrow=0.0008, drought_every=3000, drought_length=1000, drought_regrow=0.0003)
+# experiment 2. The unreliable childhood: food as in the scarce childhood on average (0.001), but it comes in
+# waves: a quarter of the time a harvest at the standard adult world's rate, the rest nothing. The hungry
+# childhood: steady, with the rate at which wellbeing at the end of childhood matched the unreliable
+# childhood in calibration (see PREREGISTRATION_EXP2.md)
+UNRELIABLE = WorldConfig(regrow=0.004, drought_regrow=0.0, wave_on=1000, wave_off=3000)
+HUNGRY = WorldConfig(regrow=0.00045)
 
 
 class Worlds:
@@ -126,6 +140,16 @@ class Worlds:
         # same seed see the same sequence of maps whatever they do (collapses draw from self.rng)
         if config.new_map_every:
             self.map_rng = np.random.default_rng(rng.integers(2**63))
+        # experiment 2: the waves come from their own generator too, so they do not depend on the agent
+        if config.wave_on:
+            self.wave_rng = np.random.default_rng(rng.integers(2**63))
+            self.empty = self.wave_rng.random(n) < config.wave_off / (config.wave_on + config.wave_off)
+            self.wave_left = self._wave_length(self.empty)
+
+    def _wave_length(self, empty):
+        """Random lengths for spells starting now: geometric, with the mean of an empty spell or a harvest."""
+        mean = np.where(empty, self.cfg.wave_off, self.cfg.wave_on)
+        return self.wave_rng.geometric(1 / mean)
 
     def _lay_out(self, i, rng=None):
         s, cfg = self.cfg.size, self.cfg
@@ -199,6 +223,8 @@ class Worlds:
 
     def drought(self):
         cfg = self.cfg
+        if cfg.wave_on:
+            return self.empty.copy()      # an empty spell counts as a drought in every measure
         if cfg.drought_every == 0:
             return np.zeros(self.n, bool)
         return (self.clock % cfg.drought_every) >= cfg.drought_every - cfg.drought_length
@@ -280,6 +306,12 @@ class Worlds:
         self.food += self.patch * rate[:, None, None]
         np.clip(self.food, 0, 1, out=self.food)
         self.clock += 1
+        if self.cfg.wave_on:
+            self.wave_left -= 1
+            turn = self.wave_left <= 0
+            if turn.any():
+                self.empty = np.where(turn, ~self.empty, self.empty)
+                self.wave_left = np.where(turn, self._wave_length(self.empty), self.wave_left)
 
         collapse = (self.energy <= 0) | (self.water_level <= 0) | (self.temp < T_COLLAPSE)
         reward = np.where(collapse, 0.0, self.wellbeing()).astype(np.float32)
