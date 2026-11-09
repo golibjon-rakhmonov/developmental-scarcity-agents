@@ -9,6 +9,7 @@ FIRST=${1:-0}
 LAST=${2:-9}
 PARALLEL=${3:-8}
 PY=${PYTHON:-python3}
+"$PY" -c "import numpy, torch" 2>/dev/null || { echo "$PY cannot import numpy and torch. Set up .venv first, see README."; exit 1; }
 for s in $(seq "$FIRST" "$LAST"); do
   for c in scarce rich none; do
     [ -f "runs/${c}_s${s}_end.pt" ] && continue    # already finished

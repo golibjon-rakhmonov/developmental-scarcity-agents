@@ -52,7 +52,7 @@ same adult world, so they can be compared seed by seed.
 
 ## Running
 
-    python3 -m venv .venv
+    python3.12 -m venv .venv            # needs Python 3.11 or newer; the python3 that ships with macOS is 3.9
     .venv/bin/pip install -r requirements.txt
 
     .venv/bin/python run_life.py --childhood scarce --seed 0      # one life
