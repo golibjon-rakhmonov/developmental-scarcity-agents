@@ -31,9 +31,10 @@ import numpy as np
 import torch
 
 from agent import Agent, Net
-from world import ADULT, ADULT_POORER, ADULT_RICHER, N_ACTIONS, OBS_DIM, HUNGRY, RICH, SCARCE, UNRELIABLE, Worlds
+from world import ADULT, ADULT_POORER, ADULT_RICHER, N_ACTIONS, OBS_DIM, HUNGRY, RICH, SCARCE, UNRELIABLE, VARIED, Worlds
 
-CHILDHOODS = {"scarce": SCARCE, "rich": RICH, "adult": ADULT, "unreliable": UNRELIABLE, "hungry": HUNGRY, "none": None}
+CHILDHOODS = {"scarce": SCARCE, "rich": RICH, "adult": ADULT, "unreliable": UNRELIABLE, "hungry": HUNGRY, "varied": VARIED,
+              "none": None}
 # version 1: adult worlds a life can branch into after one childhood; the number fixes each branch's
 # random seed, so a branch does not depend on which other branches run in the same process
 BRANCHES = {"standard": (0, ADULT), "richer": (1, ADULT_RICHER), "poorer": (2, ADULT_POORER)}

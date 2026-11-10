@@ -5,6 +5,7 @@
     .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 140 169) --childhoods scarce hungry unreliable rich adult --out runs_exp2
     .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 170 189) --childhoods scarce rich adult --hidden 64 --out runs_net64
     .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 170 189) --childhoods scarce rich adult --hidden 256 --out runs_net256
+    .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 190 219) --childhoods scarce rich adult varied --out runs_exp3
 
 Each process lives one childhood and then one adult life in each of the three adult worlds.
 Lives that already finished are skipped, so the script can be stopped with one Ctrl+C and started
@@ -59,8 +60,8 @@ def main():
     p.add_argument("--parallel", type=int, default=8)
     p.add_argument("--seeds", type=int, nargs="+", default=list(SEEDS))
     p.add_argument("--childhoods", nargs="+", default=CHILDHOODS,
-                   choices=["scarce", "rich", "adult", "unreliable", "hungry", "none"],
-                   help="experiment 2 adds the unreliable and the hungry childhood; the default is version 1")
+                   choices=["scarce", "rich", "adult", "unreliable", "hungry", "varied", "none"],
+                   help="experiment 2 adds the unreliable and the hungry childhood, experiment 3 the varied one; the default is version 1")
     p.add_argument("--hidden", type=int, help="robustness check: units per hidden layer (default: the agent's 128)")
     p.add_argument("--out", default="runs_v1")
     args = p.parse_args()

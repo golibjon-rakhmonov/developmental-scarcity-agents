@@ -94,6 +94,10 @@ ADULT_POORER = WorldConfig(regrow=0.0008, drought_every=3000, drought_length=100
 # childhood in calibration (see PREREGISTRATION_EXP2.md)
 UNRELIABLE = WorldConfig(regrow=0.004, drought_regrow=0.0, wave_on=1000, wave_off=3000)
 HUNGRY = WorldConfig(regrow=0.00045)
+# experiment 3. The varied childhood: the rich and the scarce childhood by turns. Plentiful spells (food as in
+# the rich childhood) and lean spells (food as in the scarce childhood) of random length, 5,000 steps each on
+# average, so the agent spends half of its childhood in each (see PREREGISTRATION_EXP3.md)
+VARIED = WorldConfig(regrow=0.02, drought_regrow=0.001, wave_on=5000, wave_off=5000)
 
 
 class Worlds:

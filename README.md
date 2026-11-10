@@ -124,6 +124,17 @@ seeds 170-189, scarce, rich and adult childhood:
     .venv/bin/python analyze_v1_rep.py --runs runs_net64 --seeds $(seq 170 189)
     .venv/bin/python analyze_v1_rep.py --runs runs_net256 --seeds $(seq 170 189)
 
+## Experiment 3
+
+`PREREGISTRATION_EXP3.md`. One more childhood, `varied`: plentiful spells (food as in the rich childhood)
+and lean spells (food as in the scarce childhood) by turns, 5,000 steps each on average. It tests whether
+living through both makes an agent do well across adult worlds. Seeds 190-219, four childhoods, 120
+processes:
+
+    .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 190 219) --childhoods scarce rich adult varied --out runs_exp3
+    .venv/bin/python analyze_exp3.py
+    .venv/bin/python analyze_v1_rep.py --runs runs_exp3 --seeds $(seq 190 219)     # third replication of version 1
+
 ## Output
 
 For each life, in `runs/`:
@@ -138,5 +149,6 @@ For each life, in `runs/`:
 
 Seeds 900 and above were used to calibrate the world. Seeds 0-9 are kept for the pilot itself and
 are run only after `PREREGISTRATION.md` is committed. Seeds 10-29 belong to the version 0 robustness
-check, seeds 100-119 to version 1, seeds 120-139 to its replication, seeds 140-169 to experiment 2, seeds 170-189 to the network-size check.
+check, seeds 100-119 to version 1, seeds 120-139 to its replication, seeds 140-169 to experiment 2, seeds 170-189 to the network-size check,
+seeds 190-219 to experiment 3.
 The calibration runs are in `calibration/`.
