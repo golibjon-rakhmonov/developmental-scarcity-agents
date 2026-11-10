@@ -156,7 +156,7 @@ def figure2(trace_dir, out):
     ax.set_xticks([0, 0.5, 1], ["0\nlike the twin that\ngave the upper layers", "0.5", "1\nlike the twin that\ngave the lower layers"])
     ax.xaxis.grid(True, color=GRID, linewidth=0.6)
     ax.set_axisbelow(True)
-    ax.set_title("b  Chimeras act like the donor of the lower layers", color=INK, pad=6)
+    ax.set_title("b  Chimeras act mostly like the donor of the lower layers", color=INK, pad=6)
     handles = [plt.Line2D([], [], ls="", marker="o", color="#184f95", ms=4.5, label="only first layer swapped"),
                plt.Line2D([], [], ls="", marker="s", color="#6da7ec", ms=4.5, label="both hidden layers swapped"),
                plt.Line2D([], [], ls="", marker="o", mfc="#52514e", mec="#52514e", ms=4.5, label="lower layers from scarce twin"),
