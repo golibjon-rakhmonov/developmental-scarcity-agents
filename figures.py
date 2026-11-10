@@ -3,10 +3,12 @@
     .venv/bin/python figures.py --out figures
 
 Figure 1: collapses and daytime on cold ground in the frozen check, by childhood and adult world,
-          seeds 100-169 (version 1, its replication and the scarce, rich and adult childhoods of
-          experiment 2; identical code and settings).
+          seeds 100-169 and 190-219 (version 1, its replication and the scarce, rich and adult
+          childhoods of experiments 2 and 3; identical code and settings).
 Figure 2: where the trace lives: layer similarity between twins and chimera positions (trace_v1/).
 Figure 3: experiment 2: food carried at home and energy in the standard adult world, by childhood.
+Figure 4: experiment 3: collapses in the frozen check for the varied childhood and its twins, by adult
+          world and averaged over the three adult worlds, seeds 190-219.
 Means over seeds with bootstrap 95% confidence intervals (10,000 resamples of seeds).
 """
 import argparse
@@ -32,9 +34,9 @@ import pandas as pd
 from analyze_v1 import phase_mean
 
 INK, INK2, GRID = "#0b0b0b", "#52514e", "#e4e3df"
-COLOR = {"scarce": "#2a78d6", "adult": "#eb6834", "rich": "#1baf7a"}   # validated: worst CVD dE 9.2
+COLOR = {"scarce": "#2a78d6", "adult": "#eb6834", "rich": "#1baf7a", "varied": "#eda100"}   # validated: worst CVD dE 9.1
 NAME = {"scarce": "scarce childhood", "adult": "childhood in the adult world", "rich": "rich childhood",
-        "hungry": "hungry", "unreliable": "unreliable", "none": "no childhood"}
+        "hungry": "hungry", "unreliable": "unreliable", "none": "no childhood", "varied": "varied childhood"}
 plt.rcParams.update({
     "font.family": "Inter", "font.size": 7.5, "axes.titlesize": 8, "axes.labelsize": 7.5,
     "xtick.labelsize": 7, "ytick.labelsize": 7, "legend.fontsize": 7, "pdf.fonttype": 42,
@@ -195,11 +197,62 @@ def figure3(L, seeds, out):
     plt.close(fig)
 
 
+def figure4(L, seeds, out):
+    worlds = ["poorer", "standard", "richer"]
+    order = ["scarce", "rich", "adult", "varied"]
+    fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.6), gridspec_kw={"wspace": 0.5, "width_ratios": [1.25, 1]})
+    ax = axes[0]
+    x = np.arange(3)
+    ends = {}
+    for c in order:
+        stats = [ci([phase_mean(L[(c, s, b)], "frozen", "collapses_per_1k_normal") for s in seeds]) for b in worlds]
+        mean = np.array([t[0] for t in stats])
+        ax.plot(x, mean, color=COLOR[c], lw=2, zorder=3)
+        ax.vlines(x, [t[1] for t in stats], [t[2] for t in stats], color=COLOR[c], lw=1.2, zorder=3)
+        ax.scatter(x, mean, s=22, color=COLOR[c], edgecolor="white", linewidth=1.2, zorder=4)
+        ends[c] = mean[-1]
+    # direct labels at the right end; labels of lines that end close together are moved apart
+    low_to_high = sorted(order, key=ends.get)
+    shift = {c: 0.0 for c in order}
+    for lower, upper in zip(low_to_high, low_to_high[1:]):
+        if ends[upper] - ends[lower] < 0.2:
+            shift[lower], shift[upper] = shift[lower] - 4.5, shift[upper] + 4.5
+    for c in order:
+        ax.annotate(NAME[c].replace("childhood in the adult world", "adult-world childhood"),
+                    (x[-1], ends[c]), xytext=(6, shift[c]), textcoords="offset points", va="center", fontsize=6.8, color=INK)
+    ax.set_xticks(x, ["poorer\n0.0008", "standard\n0.004", "richer\n0.04"])
+    ax.set_xlim(-0.3, 3.1)
+    ax.set_ylim(bottom=0)
+    ax.set_xlabel("adult world: food growth per patch per step, outside droughts", color=INK2, labelpad=4)
+    ax.set_ylabel("collapses per 1,000 steps")
+    ax.set_title("a  Collapses right after the move", color=INK, pad=6)
+    grid(ax)
+
+    ax = axes[1]
+    for i, c in enumerate(order):
+        v = [np.mean([phase_mean(L[(c, s, b)], "frozen", "collapses_per_1k") for b in worlds]) for s in seeds]
+        mean, lo, hi = ci(v)
+        ax.scatter(np.full(len(v), i) + RNG.uniform(-0.18, 0.18, len(v)), v, s=6, color=COLOR[c], alpha=0.45,
+                   linewidth=0, zorder=2)
+        ax.vlines(i, lo, hi, color=INK, lw=1.4, zorder=3)
+        ax.scatter([i], [mean], s=26, color=INK, edgecolor="white", linewidth=1.2, zorder=4)
+    ax.set_xticks(np.arange(len(order)), ["scarce", "rich", "adult\nworld", "varied"])
+    ax.set_xlabel("childhood", color=INK2, labelpad=4)
+    ax.set_ylabel("collapses per 1,000 steps")
+    ax.set_title("b  Mean of the three adult worlds", color=INK, pad=6)
+    ax.set_ylim(bottom=0)
+    grid(ax)
+    fig.savefig(out / "fig4_varied.pdf", bbox_inches="tight")
+    fig.savefig(out / "fig4_varied.png", bbox_inches="tight", dpi=200)
+    plt.close(fig)
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--v1", default="runs_v1")
     p.add_argument("--rep", default="runs_v1_rep")
     p.add_argument("--exp2", default="runs_exp2")
+    p.add_argument("--exp3", default="runs_exp3")
     p.add_argument("--trace", default="trace_v1")
     p.add_argument("--out", default="figures")
     args = p.parse_args()
@@ -210,9 +263,12 @@ def main():
     L.update(lives(args.rep, range(120, 140), ["scarce", "rich", "adult"]))
     E = lives(args.exp2, range(140, 170), ["scarce", "rich", "adult", "hungry", "unreliable"])
     L.update({k: v for k, v in E.items() if k[0] in ("scarce", "rich", "adult")})
-    figure1(L, list(range(100, 170)), out)
+    V = lives(args.exp3, range(190, 220), ["scarce", "rich", "adult", "varied"])
+    L.update({k: v for k, v in V.items() if k[0] in ("scarce", "rich", "adult")})
+    figure1(L, list(range(100, 170)) + list(range(190, 220)), out)
     figure2(Path(args.trace), out)
     figure3(E, list(range(140, 170)), out)
+    figure4(V, list(range(190, 220)), out)
     print(f"written to {out}")
 
 
