@@ -135,6 +135,15 @@ processes:
     .venv/bin/python analyze_exp3.py
     .venv/bin/python analyze_v1_rep.py --runs runs_exp3 --seeds $(seq 190 219)     # third replication of version 1
 
+## Robustness to an agent with memory
+
+`PREREGISTRATION_MEMORY.md`. Version 1 again with an agent that has a memory: the second hidden layer is
+a recurrent GRU cell (`--memory`), trained through time. Seeds 220-239, scarce, rich and adult childhood,
+60 processes (each takes several times longer than without memory):
+
+    .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 220 239) --childhoods scarce rich adult --memory --out runs_memory
+    .venv/bin/python analyze_v1_rep.py --runs runs_memory --seeds $(seq 220 239)
+
 ## Output
 
 For each life, in `runs/`:
@@ -150,5 +159,5 @@ For each life, in `runs/`:
 Seeds 900 and above were used to calibrate the world. Seeds 0-9 are kept for the pilot itself and
 are run only after `PREREGISTRATION.md` is committed. Seeds 10-29 belong to the version 0 robustness
 check, seeds 100-119 to version 1, seeds 120-139 to its replication, seeds 140-169 to experiment 2, seeds 170-189 to the network-size check,
-seeds 190-219 to experiment 3.
+seeds 190-219 to experiment 3, seeds 220-239 to the check with memory.
 The calibration runs are in `calibration/`.

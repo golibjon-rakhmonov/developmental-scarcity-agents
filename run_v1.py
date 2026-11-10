@@ -6,6 +6,7 @@
     .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 170 189) --childhoods scarce rich adult --hidden 64 --out runs_net64
     .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 170 189) --childhoods scarce rich adult --hidden 256 --out runs_net256
     .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 190 219) --childhoods scarce rich adult varied --out runs_exp3
+    .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 220 239) --childhoods scarce rich adult --memory --out runs_memory
 
 Each process lives one childhood and then one adult life in each of the three adult worlds.
 Lives that already finished are skipped, so the script can be stopped with one Ctrl+C and started
@@ -63,12 +64,15 @@ def main():
                    choices=["scarce", "rich", "adult", "unreliable", "hungry", "varied", "none"],
                    help="experiment 2 adds the unreliable and the hungry childhood, experiment 3 the varied one; the default is version 1")
     p.add_argument("--hidden", type=int, help="robustness check: units per hidden layer (default: the agent's 128)")
+    p.add_argument("--memory", action="store_true", help="robustness check: the agent with memory (a recurrent network)")
     p.add_argument("--out", default="runs_v1")
     args = p.parse_args()
     out = Path(args.out)
     todo = jobs(args.seeds, out, args.childhoods)
     if args.hidden:
         todo = [(name, cmd + ["--hidden", str(args.hidden)]) for name, cmd in todo]
+    if args.memory:
+        todo = [(name, cmd + ["--memory"]) for name, cmd in todo]
     print(f"{len(todo)} lives to run, {args.parallel} at a time", flush=True)
     started, failed = time.time(), 0
     pool = ThreadPoolExecutor(args.parallel)

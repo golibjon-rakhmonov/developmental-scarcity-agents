@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from agent import Agent, Net
+from agent import Agent, MemoryAgent, Net
 from world import ADULT, ADULT_POORER, ADULT_RICHER, N_ACTIONS, OBS_DIM, HUNGRY, RICH, SCARCE, UNRELIABLE, VARIED, Worlds
 
 CHILDHOODS = {"scarce": SCARCE, "rich": RICH, "adult": ADULT, "unreliable": UNRELIABLE, "hungry": HUNGRY, "varied": VARIED,
@@ -81,6 +81,7 @@ def summarise(infos, rewards):
 def live(agent, worlds, total_steps, phase, write, learn=True, rollout=128):
     """Run the agent in `worlds` for `total_steps` agent-steps, one CSV row per rollout."""
     obs = worlds.observe()
+    agent.begin(worlds.n)              # an agent with memory enters every new set of worlds with an empty memory
     done = 0
     shape = (rollout, worlds.n)
     while done < total_steps:
@@ -91,6 +92,7 @@ def live(agent, worlds, total_steps, phase, write, learn=True, rollout=128):
             a, logp, v = agent.act(obs)
             b_obs[t], b_act[t], b_logp[t], b_val[t] = obs, a, logp, v
             obs, r, collapsed, info = worlds.step(a)
+            agent.after_step(collapsed)    # ... and a collapse empties it: the agent wakes with a fresh body
             b_rew[t], b_done[t] = r, collapsed
             infos.append(info)
         if learn:
@@ -121,6 +123,8 @@ def main():
                    help="version 1: after one childhood, one adult life in each of these adult worlds")
     p.add_argument("--hidden", type=int, default=128,
                    help="units in each hidden layer (robustness check; 128 in every registered run before it)")
+    p.add_argument("--memory", action="store_true",
+                   help="robustness check: an agent with memory (the second hidden layer is a recurrent GRU cell)")
     p.add_argument("--wave-on", type=int, help="experiment 2: mean length of a harvest in the unreliable childhood")
     p.add_argument("--wave-off", type=int, help="experiment 2: mean length of an empty spell in the unreliable childhood")
     p.add_argument("--out", default="runs")
@@ -202,7 +206,10 @@ def main_v1(args):
     (out / f"{name}.json").write_text(json.dumps(meta, indent=2))
 
     torch.manual_seed(args.seed)
-    agent = Agent(OBS_DIM, N_ACTIONS, lr=args.lr, gamma=args.gamma, hidden=args.hidden)
+    if args.memory and args.reset != "no":
+        raise SystemExit("--reset is not defined for the agent with memory")
+    make = MemoryAgent if args.memory else Agent
+    agent = make(OBS_DIM, N_ACTIONS, lr=args.lr, gamma=args.gamma, hidden=args.hidden)
     started = time.time()
     head = []          # childhood and home-check rows, written at the top of every branch file
     if child_cfg is not None:
