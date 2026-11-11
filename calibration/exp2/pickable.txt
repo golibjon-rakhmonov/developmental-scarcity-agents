@@ -1,0 +1,6 @@
+hungry (0.00045)   seed 900: at least one patch with a piece   9.8% of the time, 0.32 such patches on average
+hungry (0.00045)   seed 901: at least one patch with a piece   2.9% of the time, 0.09 such patches on average
+scarce             seed 900: at least one patch with a piece  99.7% of the time, 4.44 such patches on average
+scarce             seed 901: at least one patch with a piece 100.0% of the time, 4.19 such patches on average
+unreliable         seed 900: at least one patch with a piece  95.0% of the time, 4.09 such patches on average
+unreliable         seed 901: at least one patch with a piece  96.3% of the time, 4.10 such patches on average

@@ -144,6 +144,19 @@ a recurrent GRU cell (`--memory`), trained through time. Seeds 220-239, scarce, 
     .venv/bin/python run_v1.py --parallel 17 --seeds $(seq 220 239) --childhoods scarce rich adult --memory --out runs_memory
     .venv/bin/python analyze_v1_rep.py --runs runs_memory --seeds $(seq 220 239)
 
+## Checks made after the runs (not registered)
+
+`analyze_pooled.py` pools the 100 twin sets of version 1 and its three replications and prints the pooled
+and descriptive numbers the paper gives: scarce against adult by world and drought phase, the end of adult
+life in every world, time on cold ground, food carried, the agents with no childhood, the comparisons of
+experiment 3 that were not registered, and memory against no memory. Its output is in
+`exploratory/pooled.txt`. `calibration/exp2/pickable.py` measures how often food that can be picked up
+exists in the hungry, scarce and unreliable worlds (output in `calibration/exp2/pickable.txt`); it uses the
+six calibration networks saved next to it. Neither tests a registered prediction.
+
+    .venv/bin/python analyze_pooled.py > exploratory/pooled.txt
+    .venv/bin/python calibration/exp2/pickable.py > calibration/exp2/pickable.txt
+
 ## Output
 
 For each life, in `runs/`:
